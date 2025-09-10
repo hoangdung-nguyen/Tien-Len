@@ -11,3 +11,8 @@ A normal game has 4 players. If there is not enough players, all remaining spots
 
 
 The game UI is done but there is not yet menu UI. A lot of debugging output prints if you do not make TienLen.DEBUG false.
+
+TODO list:
+- Make a menu
+- Improve AI
+- Refactor GUI
