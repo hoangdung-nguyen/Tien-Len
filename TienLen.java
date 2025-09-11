@@ -32,7 +32,8 @@ public class TienLen extends JFrame{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	final static boolean DEBUG=true;
+	final static boolean DEBUG=false;
+	final static boolean UIDEBUG=true;
 	private static final int PORT = 5000;
 	final static Card LOWEST_CARD = new Card('3','s');
 	private final transient ServerSocket serverSocket;
@@ -85,6 +86,7 @@ public class TienLen extends JFrame{
 	}
 	
 	public TienLen(Color back) throws IOException {
+		if(UIDEBUG)System.out.println("public TienLen(Color back) throws IOException {");
 		serverSocket = new ServerSocket(PORT);
 		System.out.println("Tien Len Server is running...");		
 		backColor=back;
@@ -115,6 +117,7 @@ public class TienLen extends JFrame{
 	}
 	
 	private void initializePlayArea(){
+		if(UIDEBUG)System.out.println("private void initializePlayArea(){");
 		// Making window presets
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(25, 100, 1000, 1000);
@@ -130,7 +133,7 @@ public class TienLen extends JFrame{
 		normalize(table);
 		cardsPanel=new JPanel(null);
 		normalize(cardsPanel);
-		if(DEBUG)temporaryDebugDisplay=new JTextArea();
+		if(UIDEBUG)temporaryDebugDisplay=new JTextArea();
 		table1=new JPanel();
 		normalize(table1);
 		table1.setBackground(midColor1);
@@ -178,6 +181,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void waitForPlayers() {
+		if(UIDEBUG)System.out.println("private void waitForPlayers() {");
 		if(!robotAutoRun) waitingForMove = true;
 		// Start listening for connections in a separate thread
 		Thread acceptThread = new Thread(() -> {
@@ -239,11 +243,11 @@ public class TienLen extends JFrame{
 	}
 
 	private void startGameSetup() throws IOException {
+		if(UIDEBUG)System.out.println("private void startGameSetup() throws IOException {");
 		broadcastUpdate();
 		broadcast(new ServerMessage(MessageType.JOIN, new GameState(players,playersIndexOf(currentPlayer),state)));
 		for(int i=0;i<Utils.MAX_PLAYERS;i++) initializePlayerArea(i);
 		// I would love to put these in initPlayArea, but these need to be after the cards' bounds are set so they can all run componentResized when this is set.
-		setBounds(25, 100, 1000, 1000);
 		highlightCurrentPlayer();
 		broadcast(new ServerMessage(MessageType.PLAY, new GameState(players,playersIndexOf(currentPlayer),state)));
 		for (Player p:players) {
@@ -253,12 +257,14 @@ public class TienLen extends JFrame{
 	}
 
 	private void startArraysSetup() {
+		if(UIDEBUG)System.out.println("private void startArraysSetup() {");
 		playersInGame=new ArrayList<Player>(players);
 		playersInPlay=new ArrayList<Player>(playersInGame);
 		state=stackState.none;
 		currentPlayer.getMovesThatContains(Utils.LOWEST_CARD);
 	}
 	private void resizeCards() { //resizes cards on player hands.
+		if(UIDEBUG)System.out.println("private void resizeCards() { ");
 		startX = (getWidth()-getInsets().left-getInsets().right)/15;
 		startY = (getHeight()-getInsets().top-getInsets().bottom)/15;
 		if(getWidth()<getHeight()) {
@@ -272,6 +278,7 @@ public class TienLen extends JFrame{
 	}
 
 	public void chiaBai() {
+		if(UIDEBUG)System.out.println("public void chiaBai() {");
 		while(!bai.isEmpty()) { // Chia bai
 			for(Player p:players) {
 				p.add(bai.pop());
@@ -283,6 +290,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void initializePlayerPanels(int i) {
+		if(UIDEBUG)System.out.println("private void initializePlayerPanels(int i) {");
 		Player p=players.get(i);
 		p.ui = new UISet();
 		JPanel temp; 
@@ -331,6 +339,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void playHang() {
+		if(UIDEBUG)System.out.println("private void playHang() {");
 		System.out.println("YOU GOT GOT");
 		Stack<TreeSet<Card>> theGotten=new Stack<TreeSet<Card>>();
 		while(!currentStack.isEmpty()){
@@ -349,6 +358,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void initializePlayerArea(int i) {
+		if(UIDEBUG)System.out.println("private void initializePlayerArea(int i) {");
 		Player p=players.get(i);
 		if(DEBUG) {
 			System.out.println("\n"+p);
@@ -414,6 +424,7 @@ public class TienLen extends JFrame{
 	}
 
 	public void handleClient(OnlinePlayer play, ClientMessage message) throws IOException {
+		if(UIDEBUG)System.out.println("public void handleClient(OnlinePlayer play, ClientMessage message) throws IOException {");
 		switch(message.getType()) {
 		case DISCONNECT:
 			
@@ -448,6 +459,7 @@ public class TienLen extends JFrame{
 	}
 
 	public boolean handlePlay(OnlinePlayer play, TreeSet<Card> selectedCards) throws IOException {
+		if(UIDEBUG)System.out.println("public boolean handlePlay(OnlinePlayer play, TreeSet<Card> selectedCards) throws IOException {");
 		if (play!=currentPlayer) return false;
 		if(DEBUG)System.out.println("THIS IS PRESSED "+currentPlayer.moves+currentPlayer.current);
 		if (currentPlayer.moves.contains(selectedCards)) {
@@ -467,6 +479,7 @@ public class TienLen extends JFrame{
 			}
 			placeCards(currentPlayer,selectedCards);
 			reformatCards(currentPlayer);
+			broadcast(new ServerMessage(MessageType.PLACE, new TreeSet<Card>(selectedCards)));
 			if(DEBUG)temporaryDebugDisplay.append(selectedCards.toString());
 			currentPlayer.deselectAll();
 			currentPlayer.moves.clear();
@@ -479,6 +492,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void waitForPlayerMove() throws IOException {
+		if(UIDEBUG)System.out.println("private void waitForPlayerMove() throws IOException {");
 		if(!robotAutoRun)waitingForMove = true;
 		// Enable controls only for current player
 		currentPlayer.ui.play.setEnabled(true);
@@ -508,6 +522,7 @@ public class TienLen extends JFrame{
 	}
 	
 	private void printPlayerArrays() {
+		if(UIDEBUG)System.out.println("private void printPlayerArrays() {");
 		System.out.println(playersIndexOf(currentPlayer));
 		System.out.print("playersInGame: ");
 		for(Player p:playersInGame) {
@@ -521,6 +536,7 @@ public class TienLen extends JFrame{
 	}
 	
 	private void nextPlayer() throws IOException { //get next player in game
+		if(UIDEBUG)System.out.println("private void nextPlayer() throws IOException {");
 		if(playersInPlay.size()<2) {
 			playersInPlay=new ArrayList<Player>(playersInGame);
 			state=stackState.none;
@@ -537,11 +553,11 @@ public class TienLen extends JFrame{
 		highlightCurrentPlayer();
 		currentPlayer.getValidMoves(state,(currentStack.isEmpty())?null:currentStack.peek());
 		broadcast(new ServerMessage(MessageType.PLAY, new GameState(players,playersIndexOf(currentPlayer),state)));
-		broadcast(new ServerMessage(MessageType.PLACE, new TreeSet<Card>(currentStack.peek())));
 		if(currentPlayer instanceof ComputerPlayer) computerPlay((ComputerPlayer)currentPlayer);
 	}
 
 	private void computerPlay(ComputerPlayer play) throws IOException {
+		if(UIDEBUG)System.out.println("private void computerPlay(ComputerPlayer play) throws IOException {");
 		play.getMove(state,(currentStack.isEmpty())?null:currentStack.peek());
 		if(Player.getMoveState(play.current)!=stackState.none) state=Player.getMoveState(play.current);
 		try {
@@ -577,6 +593,7 @@ public class TienLen extends JFrame{
 			}
 			placeCards(currentPlayer,play.current);
 			reformatCards(currentPlayer);
+			broadcast(new ServerMessage(MessageType.PLACE, new TreeSet<Card>(play.current)));
 			if(DEBUG)temporaryDebugDisplay.append(play.current.toString());
 			currentPlayer.deselectAll();
 			currentPlayer.moves.clear();
@@ -590,6 +607,7 @@ public class TienLen extends JFrame{
 		nextPlayer();
 	}
 	public void reformatCards(Player p) {
+		if(UIDEBUG)System.out.println("public void reformatCards(Player p) {");
 		int i = playersIndexOf(p);
 		boolean sides=i%2==1;
 		int startX=this.startX,startY=this.startY;
@@ -619,6 +637,7 @@ public class TienLen extends JFrame{
 	}
 	
 	private void placeCards(Player p, TreeSet<Card> ca) {
+		if(UIDEBUG)System.out.println("private void placeCards(Player p, TreeSet<Card> ca) {");
 		int i = playersIndexOf(p);
 		boolean sides=i%2==1;
 		int cardHeight=(int)(this.cardHeight/1.5);int cardWidth=(int)(this.cardWidth/1.5);
@@ -647,6 +666,7 @@ public class TienLen extends JFrame{
 	}
 
 	public void winnerCheck() { //checks if there is an empty player
+		if(UIDEBUG)System.out.println("public void winnerCheck() {");
 		//Because I see no scenario where there are more than 1 empty player in that array, I will do a temp variable to avoid concurrentMod
 		Player winnerPlayer=null;
 		for(Player p:playersInGame) {
@@ -668,6 +688,7 @@ public class TienLen extends JFrame{
 	}
 
 	public void handCheck() { //checking for instant wins
+		if(UIDEBUG)System.out.println("public void handCheck() { ");
 		for(Player p:players) {
 			Player pCheck=new Player(p);
 			pCheck.getMoves();
@@ -685,6 +706,7 @@ public class TienLen extends JFrame{
 	}
 
 	private void thuiHeo(Player p) {
+		if(UIDEBUG)System.out.println("private void thuiHeo(Player p) {");
 		for(Card car:p) {
 			p.ui.cardsPane.remove(p.ui.cards.get(car));
 			if(car.rank=='2') {
@@ -700,6 +722,7 @@ public class TienLen extends JFrame{
 		}
 	}
 	private void end() {
+		if(UIDEBUG)System.out.println("private void end() {");
 		if(!robotAutoRun)waitingForMove=true;
 		//table1.add(temporaryDebugDisplay);
 		String endText = "Scoreboard:\n";
@@ -727,6 +750,7 @@ public class TienLen extends JFrame{
 	}
 	
 	public void newGame() { //used only for games 2+
+		if(UIDEBUG)System.out.println("public void newGame() {");
 		cardsPanel.removeAll();
 		cardsPanel.add(ComputerPlayerPlay);
 		bai=new Deck();bai.shuffle();
@@ -772,6 +796,7 @@ public class TienLen extends JFrame{
 		highlightCurrentPlayer();
 	}
 	private void highlightCurrentPlayer() {
+		if(UIDEBUG)System.out.println("private void highlightCurrentPlayer() {");
 		for(Player p:players) {
 			p.ui.panel.setBackground(midColor2);
 		}
@@ -779,6 +804,7 @@ public class TienLen extends JFrame{
 	}
 	
 	private int playersIndexOf(Player play) { // DID YOU KNOW??? I REMOVED THIS SOME TIME BACK IN REFACTORING AND NOW HAVE TO ADD IT BACK IN BECAUSE TREESET.EQUALS STILL ALSO ACCOUNTS FOR ELEMENTS.
+		if(UIDEBUG)System.out.println("private int playersIndexOf(Player play) {");
 		for(int i=0;i<Utils.MAX_PLAYERS;++i) {
 			if(play == players.get(i)) return i;
 		}
@@ -808,8 +834,8 @@ public class TienLen extends JFrame{
 	public GameState getGameState() {
 		return new GameState(players,playersIndexOf(currentPlayer),state);
 	}
-	public void replaceWithComputer(OnlinePlayer play) {
-		
+	public void replaceWithComputer(int play) {
+		players.set(play, new ComputerPlayer(players.get(play),currentStack,playerPlayed));
 	}
 }
 

@@ -186,7 +186,10 @@ public class PlayerClient extends JFrame{
 						GameState gameS = (GameState) ((ServerMessage)response).getData();
 						if(TienLen.DEBUG)System.out.println("Server updated state"+gameS);
 						for (int i = 0;i<players.size();++i) {
-							players.get(i).cardsNum = gameS.handSizes.get(i);
+							if(players.get(i).cardsNum != gameS.handSizes.get(i)) {
+								players.get(i).cardsNum = gameS.handSizes.get(i);
+								reformatCards(players.get(i));
+							}
 						}
 						this.currentPlayerID = gameS.currentPlayerID;
 						SwingUtilities.invokeLater(this::highlightPlayer);
@@ -202,7 +205,7 @@ public class PlayerClient extends JFrame{
 						TreeSet<Card> cards = (TreeSet<Card>) ((ServerMessage)response).getData();
 						if(TienLen.DEBUG)System.out.println("Got place: "+cards);
 						currentStack.push(new TreeSet<>(cards));
-						placeCards(currentPlayerID-1,cards);
+						placeCards(currentPlayerID,cards);
 						break;
 					default:
 						break;
@@ -223,7 +226,6 @@ public class PlayerClient extends JFrame{
 	public void startGameSetup() {
 		for(int i=0;i<players.size();i++) initializePlayerArea(i);
 		// I would love to put these in initPlayArea, but these need to be after the cards' bounds are set so they can all run componentResized when this is set.
-		setBounds(25, 100, 1000, 1000);
 		for (UISet p:players) {
 			reformatCards(p);
 		}
@@ -342,6 +344,7 @@ public class PlayerClient extends JFrame{
 	
 	public void reformatCards(UISet onlinePlayer) {
 		int i = players.indexOf(onlinePlayer);
+		if(TienLen.DEBUG) System.out.println("Reformating: Player "+i);
 		boolean sides=i%2==1;
 		int startX=this.startX,startY=this.startY;
 		int areaWidth=(sides?startY:startX)*Utils.CARDS_PER_PLAYER-2*cardHeight;
@@ -373,6 +376,7 @@ public class PlayerClient extends JFrame{
 	}
 
 	void placeCards(int i, TreeSet<Card> ca) {
+		if(TienLen.DEBUG) System.out.println("Placing: "+ ca +" in Player "+i);
 		boolean sides=i%2==1;
 		int cardHeight=(int)(this.cardHeight/1.5);int cardWidth=(int)(this.cardWidth/1.5);
 		int startX=this.startX*3+cardHeight/2*((currentStack.size()-1)/4),startY=this.startY*3+cardHeight/2*((currentStack.size()-1)/4);
@@ -392,12 +396,14 @@ public class PlayerClient extends JFrame{
 		int index=0;
 		for(Card c:ca) {
 			JCard box;
-			if(i==serverConnection.currentPlayerID) box = players.get(i).cards.get(c);
-			else box=new JCard(c);
+			if(i==serverConnection.playerID) box = players.get(i).cards.get(c);
+			else {
+				box=new JCard(c);
+				if(sides) box.rotate(90);
+			}
 			box.setBounds(startX+(sides?0:(index*overlap)),startY+(!sides?0:(index*overlap)), 
 							sides?cardHeight:cardWidth, sides?cardWidth:cardHeight);
 			index++;
-			if(sides) box.rotate(90);
 			cardsPanel.add(box, 4);
 			box.tintGrey();
 		}
@@ -470,6 +476,7 @@ class OnlinePlayer extends Player implements Runnable {
 			}
 		} catch (IOException | ClassNotFoundException e) {
 			System.out.println("Player " + playerID + " disconnected.");
+			server.replaceWithComputer(playerID);
 		} finally {
 			try {
 				socket.close();
